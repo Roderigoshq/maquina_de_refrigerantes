@@ -130,7 +130,7 @@ class MaquinaDeVenda(tk.Tk):
         print(f"Novo Estado: {self.estado_atual}, Saída: {saida}")
         self.atualizar_interface(saida)
         if self.estado_atual == 's0' and entrada == 'b':
-            messagebox.showinfo("Info", "Máquina reiniciada, pronta para nova operação.")
+            messagebox.showinfo("Info", "Seu produto foi lançado! Máquina reiniciada, pronta para nova operação.")
 
 if __name__ == "__main__":
     app = MaquinaDeVenda()

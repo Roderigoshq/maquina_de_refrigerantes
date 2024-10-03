@@ -2,139 +2,136 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
 
+# Alfabeto
 I = ['m25', 'm50', 'm100', 'b']
+
+# Tabela de estados
 T = {
+    # Estado s0
     ('s0', 'b'): ('s0', 'n'), 
     ('s0', 'm25'): ('s1', 'n'),
     ('s0', 'm50'): ('s2', 'n'),
     ('s0', 'm100'): ('s4', 'n'),
 
+    # Estado s1
     ('s1', 'b'): ('s1', 'n'),
     ('s1', 'm25'): ('s2', 'n'),
     ('s1', 'm50'): ('s3', 'n'),
     ('s1', 'm100'): ('s5', 'n'),
 
+    # Estado s2
     ('s2', 'b'): ('s2', 'n'),
     ('s2', 'm25'): ('s3', 'n'),
     ('s2', 'm50'): ('s4', 'n'),
     ('s2', 'm100'): ('s6', 'n'),
 
+    # Estado s3
     ('s3', 'b'): ('s3', 'n'),
     ('s3', 'm25'): ('s4', 'n'),
     ('s3', 'm50'): ('s5', 'n'),
     ('s3', 'm100'): ('s7', 'n'),
 
+    # Estado s4
     ('s4', 'b'): ('s4', 'n'),
     ('s4', 'm25'): ('s5', 'n'),
     ('s4', 'm50'): ('s6', 'n'),
     ('s4', 'm100'): ('s8', 'n'),
 
+    # Estado s5
     ('s5', 'b'): ('s5', 'n'),
     ('s5', 'm25'): ('s6', 'n'),
     ('s5', 'm50'): ('s7', 'n'),
     ('s5', 'm100'): ('s8', 't25'),  
 
+    # Estado s6
     ('s6', 'b'): ('s6', 'n'),
     ('s6', 'm25'): ('s7', 'n'),
     ('s6', 'm50'): ('s8', 'n'),
     ('s6', 'm100'): ('s8', 't50'),  
 
+    # Estado s7
     ('s7', 'b'): ('s7', 'n'),
     ('s7', 'm25'): ('s8', 'n'),
     ('s7', 'm50'): ('s8', 't25'),
     ('s7', 'm100'): ('s8', 't75'),
 
+    # Estado s8
     ('s8', 'b'): ('s0', 'r'), 
     ('s8', 'm25'): ('s8', 't25'),
     ('s8', 'm50'): ('s8', 't50'),
     ('s8', 'm100'): ('s8', 't100')
 }
 
-estado_atual = 's0'
-saldo_atual = 0.00
-preco_refrigerante = 2.00
+formatacao_saida = {
+    'n': 'Não teve troco',
+    'm25': 'R$0,25',
+    'm50': 'R$0,50',
+    'm100': 'R$1,00',
+    'r': '',
+    't25': 'R$0,25',
+    't50': 'R$0,50',
+    't75': 'R$0,75',
+    't100': 'R$1,00'
+}
 
 def proximo_estado(estado, entrada):
     if entrada not in I:
         return ("Entrada inválida", None)
     return T.get((estado, entrada), ("Transição não definida", None))
 
-def transicao(entrada):
-    global estado_atual, saldo_atual
+class MaquinaDeVenda(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Máquina de Venda")
+        self.geometry("1000x1000")
 
-    novo_estado, saida = proximo_estado(estado_atual, entrada)
-
-    if entrada == "m25":
-        saldo_atual += 0.25
-    elif entrada == "m50":
-        saldo_atual += 0.50
-    elif entrada == "m100":
-        saldo_atual += 1.00
-
-    estado_atual = novo_estado 
-
-    if entrada == 'b':
-        if saldo_atual >= preco_refrigerante:
-            messagebox.showinfo("Refrigerante", "Refrigerante liberado!")
-            saldo_atual = 0 
-            estado_atual = 's0' 
-        else:
-            messagebox.showwarning("Saldo Insuficiente", "Saldo insuficiente.")
-
-    atualizar_saldo()
-
-def liberar_refrigerante():
-    global saldo_atual
-    if saldo_atual >= preco_refrigerante:
-        troco = saldo_atual - preco_refrigerante
-        if troco > 0:
-            messagebox.showinfo("Refrigerante", f"Refrigerante liberado! Troco: R${troco:.2f}")
-        else:
-            messagebox.showinfo("Refrigerante", "Refrigerante liberado! Sem troco.")
+        imagem_fundo = Image.open("fundo_maquina.png") 
+        imagem_fundo = imagem_fundo.resize((1000, 1000), Image.Resampling.LANCZOS) 
+        self.imagem_fundo = ImageTk.PhotoImage(imagem_fundo)
         
-        saldo_atual = 0 
-        estado_atual = 's0'  
-    else:
-        messagebox.showwarning("Saldo Insuficiente", "Saldo insuficiente.")
-    
-    atualizar_saldo()
+        self.estado_atual = 's0'
 
+        fundo_label = tk.Label(self, image=self.imagem_fundo)
+        fundo_label.place(x=0, y=0, relwidth=1, relheight=1) 
+        
+        container_frame = tk.Frame(self, bg="#7d2423")
+        container_frame.pack(side="right", padx=85, pady=85, anchor="e")
 
-def atualizar_saldo():
-    saldo_label.config(text=f"Saldo: R${saldo_atual:.2f}")
+        self.label_estado = tk.Label(container_frame, text="Estado: s0", font=("Poppins", 18, "bold"), bg="#7d2423", fg="#f9e4d2")
+        self.label_estado.pack(pady=10)
 
-def inserir_moeda(valor):
-    transicao(valor)
+        self.label_saida = tk.Label(container_frame, text="Troco: ", font=("Poppins", 18, "bold"), bg="#7d2423", fg="#f9e4d2")
+        self.label_saida.pack(pady=10)
 
-janela = tk.Tk()
-janela.title("Simulador de Máquina de Vendas")
-janela.geometry("1000x1000")
+        botao_frame = tk.Frame(container_frame, bg="#7d2423")
+        botao_frame.pack(pady=20)
 
-imagem_fundo = Image.open("fundo_maquina.png") 
-imagem_fundo = imagem_fundo.resize((1000, 1000), Image.Resampling.LANCZOS) 
-imagem_fundo = ImageTk.PhotoImage(imagem_fundo)
+        self.moeda_25 = tk.Button(botao_frame, text="R$0,25", font=("Poppins", 12), width=30, height=2, bg="#f9e4d2", fg="#333", command=lambda: self.adicionar_moeda('m25'))
+        self.moeda_25.grid(row=0, column=0, padx=10, pady=5)
 
-fundo_label = tk.Label(janela, image=imagem_fundo)
-fundo_label.place(x=0, y=0, relwidth=1, relheight=1) 
+        self.moeda_50 = tk.Button(botao_frame, text="R$0,50", font=("Poppins", 12), width=30, height=2, bg="#f9e4d2", fg="#333", command=lambda: self.adicionar_moeda('m50'))
+        self.moeda_50.grid(row=1, column=0, padx=10, pady=5)
 
-container_frame = tk.Frame(janela, bg="#7d2423")
-container_frame.pack(side="right", padx=85, pady=85, anchor="e")
+        self.moeda_100 = tk.Button(botao_frame, text="R$1,00", font=("Poppins", 12), width=30, height=2, bg="#f9e4d2", fg="#333", command=lambda: self.adicionar_moeda('m100'))
+        self.moeda_100.grid(row=2, column=0, padx=10, pady=5)
 
-saldo_label = tk.Label(container_frame, text=f"Saldo: R$0.00", font=("Poppins", 18, "bold"), bg="#7d2423", fg="#f9e4d2")
-saldo_label.pack(pady=10)
+        botao_refrigerante = tk.Button(container_frame, text="Comprar", font=("Poppins", 14, "bold"), width=10, height=1, bg="#101010", fg="#f9e4d2", command=lambda: self.adicionar_moeda('b'))
+        botao_refrigerante.pack(pady=20)
 
-botao_frame = tk.Frame(container_frame, bg="#7d2423")
-botao_frame.pack(pady=20)
+    def atualizar_interface(self, saida):
+        saida_formatada = formatacao_saida.get(saida, "Saída desconhecida")
+        self.label_estado.config(text=f"Estado: {self.estado_atual}")
+        self.label_saida.config(text=f"Troco: {saida_formatada}")
+        print(f"Estado Atual: {self.estado_atual}, Troco: {saida_formatada}")
 
-moeda_25 = tk.Button(botao_frame, text="R$0,25", font=("Poppins", 12), width=30, height=2, bg="#f9e4d2", fg="#333", command=lambda: inserir_moeda("m25"))
-moeda_25.grid(row=0, column=0, padx=10, pady=5)
+    def adicionar_moeda(self, entrada):
+        print(f"Tentando adicionar moeda: {entrada}")
+        self.estado_atual, saida = proximo_estado(self.estado_atual, entrada)
+        print(f"Novo Estado: {self.estado_atual}, Saída: {saida}")
+        self.atualizar_interface(saida)
+        if self.estado_atual == 's0' and entrada == 'b':
+            messagebox.showinfo("Info", "Máquina reiniciada, pronta para nova operação.")
 
-moeda_50 = tk.Button(botao_frame, text="R$0,50", font=("Poppins", 12), width=30, height=2, bg="#f9e4d2", fg="#333", command=lambda: inserir_moeda("m50"))
-moeda_50.grid(row=1, column=0, padx=10, pady=5)
-
-moeda_100 = tk.Button(botao_frame, text="R$1,00", font=("Poppins", 12), width=30, height=2, bg="#f9e4d2", fg="#333", command=lambda: inserir_moeda("m100"))
-moeda_100.grid(row=2, column=0, padx=10, pady=5)
-
-botao_refrigerante = tk.Button(container_frame, text="Comprar", font=("Poppins", 14, "bold"), width=10, height=1, bg="#101010", fg="#f9e4d2", command=liberar_refrigerante)
-botao_refrigerante.pack(pady=20)
-janela.mainloop()
+if __name__ == "__main__":
+    app = MaquinaDeVenda()
+    app.mainloop()
